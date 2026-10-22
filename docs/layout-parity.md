@@ -225,6 +225,7 @@ Installed static fonts also resolve by their OpenType PostScript name (name ID 6
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-22 | trivial | A table row that another row follows fits on a page only with room for the border below it, as checked in Word for Mac: a 60-row table with 3 pt borders kept one row more than Word on page 1 for bottom margins of 78.2–81.0 pt (`layout::tests::a_row_leaves_room_for_the_border_below_it`) |
 | 2026-10-16 | trivial | Exact PostScript names resolve installed static faces without changing family lookup |
 | 2026-10-21 | trivial | Pin the font input of four geometric layout controls; assertions and renderer font policy unchanged. |
 | 2026-10-20 | trivial | A click below a floating table, outside its cells, goes to the paragraph beside or after it instead of a cell of its last row, as checked in Word (#2038) |

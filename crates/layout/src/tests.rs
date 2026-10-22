@@ -3223,6 +3223,7 @@ fn split_row_rejects_a_hostile_cut() {
     };
     let line = |y: f32| Placed::Lines { story, path: path.clone(), para: para.clone(), l0: 0, l1: 1, x: 0.0, y, turn: TextDirection::Horizontal };
     let row = |height: f32, bottom: f32| RowLayout {
+        edge: 0.0,
         height,
         items: vec![line(0.0), line(150.0)],
         bottom,
@@ -6046,6 +6047,7 @@ fn a_split_row_moves_shading_below_the_cut_with_it() {
     let fill = |y: f32, h: f32| Placed::Fill { rect: wordcraft_geom::Rect::new(0.0, y, 100.0, h), color: wordcraft_doc::props::Rgb(200, 0, 0) };
     // The row's own shading (from its top) and a nested cell's shading starting below the cut.
     let row = RowLayout {
+        edge: 0.0,
         height: 200.0,
         items: vec![line_row(0.0), line_row(150.0), fill(0.0, 200.0), fill(150.0, 50.0)],
         bottom: 0.0,
@@ -9252,8 +9254,13 @@ fn split_cell_moves_image_frame() {
         };
         let mut kept = image.clone();
         kept.translate(0.0, top - 150.0);
-        let row =
-            RowLayout { height: 200.0, bottom: 4.0, items: vec![kept, image, frame], cells: vec![CellPart { top, items: 0..3, end: Some(170.0) }] };
+        let row = RowLayout {
+            height: 200.0,
+            bottom: 4.0,
+            edge: 0.0,
+            items: vec![kept, image, frame],
+            cells: vec![CellPart { top, items: 0..3, end: Some(170.0) }],
+        };
         let (first, rest) = split_row(&row, 100.0).unwrap();
         assert_eq!(first.items.len(), 1);
         assert!(matches!(&first.items[0], Placed::Image { rect, .. } if *rect == Rect::new(7.0, top, 20.0, 20.0)));
@@ -10687,4 +10694,38 @@ fn layout_cache_invalidates_on_changed_filepath() {
     let l_b = layout(&doc, &mut cache, &opts_b);
     let text_b = shown(&l_b);
     assert_eq!(text_b, "/path/two/a.docx", "second layout with same cache shows /path/two/a.docx");
+}
+
+/// A table of `rows` one-line rows with `border`-wide borders after `fill` filler lines.
+fn ruled_table(fill: usize, rows: usize, border: f32) -> Document {
+    let mut d = Document::from_text("filler\n".repeat(fill).trim_end());
+    let mut t = Table::new(rows, 1, 468.0);
+    t.props.style = None;
+    t.props.borders = Some(Borders::all(Border::single(border)));
+    for row in &mut t.rows {
+        row.cells[0].blocks = vec![wordcraft_doc::para_block(wordcraft_doc::Paragraph::with_text("row", Default::default()))];
+    }
+    d.insert_block(StoryRef::Body, &Path::top(fill), wordcraft_doc::Block::Table(t)).unwrap();
+    d
+}
+
+/// A row that another row follows needs the border below it on the page too, as in Word: the
+/// last row on a page ends at least that border's width above the bottom margin (a row ending
+/// 0.05 pt short of the margin with a 0.5 pt border under it moves on). Swept over the filler
+/// lines above the table, so the row nearest the margin lands at every offset from it.
+#[test]
+fn a_row_leaves_room_for_the_border_below_it() {
+    for border in [0.5f32, 3.0] {
+        for fill in 20..40 {
+            let d = ruled_table(fill, 80, border);
+            let l = lay(&d);
+            let bottom = d.last_section.page_h - d.last_section.margin_bottom;
+            let end = l.pages[0]
+                .items
+                .iter()
+                .filter_map(|it| if let Placed::Cell { rect, .. } = it { Some(rect.bottom()) } else { None })
+                .fold(0.0f32, f32::max);
+            assert!(end + border <= bottom + 0.02, "border {border}, {fill} filler lines: the last row ends at {end}, the margin at {bottom}");
+        }
+    }
 }
