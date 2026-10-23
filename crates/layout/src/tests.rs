@@ -10703,4 +10703,5 @@ fn keep_with_next_fits_to_the_hundredth_of_a_point() {
     d.para_mut(StoryRef::Body, &Path::top(2)).unwrap().props = exact(12.0);
     let l = lay(&d);
     assert_eq!(l.caret(&Pos::body(1, 0)).unwrap().page, 0, "the kept paragraph stays on the first page");
+    assert_eq!(l.caret(&Pos::body(2, 0)).unwrap().page, 0, "and so does the next one's first line");
 }
