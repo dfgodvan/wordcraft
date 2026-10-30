@@ -279,6 +279,7 @@ Custom document properties retain their bookmark link targets through DOCX saves
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-31 | trivial | DOCX: a hyperlinked table of contents writes each page number as a `PAGEREF _Toc… \h` field to the heading's bookmark, as Word does, so updating the fields in Word moves the numbers with the headings; they were plain text (checked in Word for Mac 16.93: with the headings moved a page down, the three fields update from 2, 3, 4 to 3, 4, 5). `engine::tests::toc_page_numbers_are_pageref_fields` |
 | 2026-10-28 | trivial | Preserve custom-property bookmark link targets through saves, value edits and dialog renames (#4767); no linked-value evaluation or readiness change |
 | 2026-10-28 | trivial | Note conversion preserves content with an ordered reference/run walk, #4750; readiness estimates unchanged. |
 | 2026-10-29 | trivial | DOCX comment IDs use ordered paragraph lookup and one durable-ID reservation set; threading and ID rules unchanged |
